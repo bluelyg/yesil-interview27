@@ -127,6 +127,14 @@
   .cell .dot.jayeon{background:#dc2626}
   .cell.has{cursor:pointer}
   .cell.sel{outline:2px solid var(--brand);outline-offset:-2px}
+  .cell.exam{background:#fff7ed;border-color:#fdba74;cursor:pointer}
+  .cell.exam.today{border-color:#ea580c;box-shadow:0 0 0 2px rgba(234,88,12,.2) inset}
+  .cell .exam-pill{margin-top:auto;align-self:flex-start;font-size:9.5px;font-weight:800;color:#fff;
+    background:#ea580c;border-radius:5px;padding:1px 4px;line-height:1.35;white-space:nowrap}
+  .dday.exam-row{border-color:#fdba74;background:#fff7ed}
+  .dday .n.exam{background:#ea580c}
+  .exam-badge{display:inline-block;font-size:12.5px;font-weight:800;padding:1px 8px;border-radius:999px;
+    background:#ffedd5;color:#c2410c;margin-right:6px}
   .callegend{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px;font-size:13.5px;color:var(--sub)}
   .callegend .ldot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
   #calDetail{margin-top:10px}
@@ -328,6 +336,7 @@
         <div class="callegend">
           <span><i class="ldot" style="background:#16a34a"></i>인문계</span>
           <span><i class="ldot" style="background:#dc2626"></i>자연계</span>
+          <span><i class="ldot" style="background:#ea580c"></i>수능일</span>
           <span class="muted">날짜를 누르면 대학 목록이 보여요</span>
         </div>
         <div id="calDetail"></div>
@@ -381,9 +390,14 @@
     "school": "상원고등학교",
     "planner": "유은실",
     "role": "교사",
-    "version": "1.9",
-    "date": "2026-08-30",
+    "version": "2.0",
+    "date": "2026-08-31",
     "changelog": [
+      {
+        "v": "2.0",
+        "date": "2026-08-31",
+        "note": "달력에 수능일(11/19) 표시 추가 — 계열과 무관하게 표시, D-day·상세보기에도 반영"
+      },
       {
         "v": "1.9",
         "date": "2026-08-30",
@@ -3010,6 +3024,8 @@ function whisperTranscribe(blob, onP){
 /* ===================== 달력 ===================== */
 function trackMatch(t){ return state.calTrack==='all' || state.calTrack===t; }
 function pad2(n){ return (n<10?'0':'')+n; }
+var EXAMS=[{date:'2026-11-19', name:'대학수학능력시험(수능)'}];
+function examOn(dstr){ return EXAMS.filter(function(x){return x.date===dstr;}); }
 function schedList(){
   return (DATA.interviewSchedule||[]).map(function(e){
     var start=new Date(e.date+'T00:00:00'); start.setHours(0,0,0,0);
@@ -3036,7 +3052,9 @@ function renderCalendar(){
   for(var d=1;d<=days;d++){
     var cell=el('div','cell');
     var cd=new Date(y,m-1,d); cd.setHours(0,0,0,0);
+    var ds=y+'-'+pad2(m)+'-'+pad2(d);
     var dayEvs=list.filter(function(e){return e.start<=cd && cd<=e.end;});
+    var ex=examOn(ds);
     cell.innerHTML='<span class="d">'+d+'</span>';
     if(cd.getTime()===today.getTime()) cell.classList.add('today');
     if(dayEvs.length){
@@ -3046,7 +3064,13 @@ function renderCalendar(){
       if(tr['인문']) dots.appendChild(el('span','dot inmun'));
       if(tr['자연']) dots.appendChild(el('span','dot jayeon'));
       cell.appendChild(dots);
-      (function(ds){ cell.addEventListener('click',function(){ selectDay(ds); }); })(y+'-'+pad2(m)+'-'+pad2(d));
+    }
+    if(ex.length){
+      cell.classList.add('exam');
+      cell.appendChild(el('div','exam-pill','✏️ 수능'));
+    }
+    if(dayEvs.length || ex.length){
+      (function(dd){ cell.addEventListener('click',function(){ selectDay(dd); }); })(ds);
     }
     grid.appendChild(cell);
   }
@@ -3055,11 +3079,19 @@ function renderCalendar(){
 function selectDay(dstr){
   var target=new Date(dstr+'T00:00:00'); target.setHours(0,0,0,0);
   var list=schedList().filter(function(e){return trackMatch(e.track) && e.start<=target && target<=e.end;});
+  var ex=examOn(dstr);
   var box=$('#calDetail'); box.innerHTML='';
-  if(!list.length) return;
+  if(!list.length && !ex.length) return;
   list.sort(function(a,b){return a.track<b.track?-1:1;});
   var wrap=el('div','dcard');
-  wrap.appendChild(el('div','dhead','📅 '+dstr.slice(5).replace('-','/')+' 면접 대학'));
+  wrap.appendChild(el('div','dhead','📅 '+dstr.slice(5).replace('-','/')+(list.length?' 면접 대학':'')));
+  ex.forEach(function(x){
+    var line=el('div'); line.style.margin='8px 0 0';
+    line.innerHTML='<span class="exam-badge">✏️ 수능일</span>'
+      +'<div class="unis" style="font-weight:700;color:#c2410c">'+esc(x.name)+'</div>'
+      +'<div class="unis">이 날을 기준으로 면접 일정이 <b>수능 전·후</b>로 나뉩니다.</div>';
+    wrap.appendChild(line);
+  });
   list.forEach(function(e){
     var line=el('div'); line.style.margin='8px 0 0';
     line.innerHTML='<span class="tbadge '+(e.track==='인문'?'inmun':'jayeon')+'">'+e.track+'계</span>'
@@ -3073,17 +3105,31 @@ function selectDay(dstr){
 function renderDday(){
   var box=$('#ddayList'); box.innerHTML='';
   var today=new Date(); today.setHours(0,0,0,0);
-  var evs=schedList().filter(function(e){return trackMatch(e.track);});
+  var evs=schedList().filter(function(e){return trackMatch(e.track);}).map(function(e){e._type='iv';return e;});
+  EXAMS.forEach(function(x){
+    var st=new Date(x.date+'T00:00:00'); st.setHours(0,0,0,0);
+    evs.push({date:x.date,start:st,end:st,days:1,_type:'exam',name:x.name});
+  });
   if(!evs.length){ box.appendChild(el('div','empty-state','표시할 일정이 없습니다.')); return; }
   evs.sort(function(x,y){
     var px=(x.start-today)<0, py=(y.start-today)<0; if(px!==py) return px?1:-1;
     if(x.date!==y.date) return x.date<y.date?-1:1;
-    return x.track<y.track?-1:1;
+    if(x._type!==y._type) return x._type==='exam'?-1:1;
+    return (x.track||'')<(y.track||'')?-1:1;
   });
   evs.forEach(function(e){
     var diff=Math.round((e.start-today)/86400000);
     var tag = diff>0?('D-'+diff):(diff===0?'D-DAY':('D+'+(-diff)));
     var cls = diff<0?'done':(diff<=7?'soon':'');
+    if(e._type==='exam'){
+      var er=el('div','dday exam-row');
+      er.innerHTML='<div class="n '+(diff<0?'done':'exam')+'">'+tag+'</div>'
+        +'<div style="flex:1">'
+        +'<span class="exam-badge">✏️ 수능일</span>'
+        +'<b>'+fmtRange(e)+'</b>'
+        +'<div class="unis">'+esc(e.name)+'</div></div>';
+      box.appendChild(er); return;
+    }
     var row=el('div','dday');
     row.innerHTML='<div class="n '+cls+'">'+tag+'</div>'
       +'<div style="flex:1">'
