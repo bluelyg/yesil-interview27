@@ -170,6 +170,10 @@
   .ag-prompt{width:100%;box-sizing:border-box;height:160px;font-family:Consolas,monospace;font-size:12px;line-height:1.5;
     border:1px solid var(--line);border-radius:8px;padding:9px;background:#fff;color:#1e293b;resize:vertical}
   .ag-note{margin:9px 0 0;font-size:13px;color:var(--sub);line-height:1.5}
+  .ag-hl{color:#c2410c;font-weight:700}
+  .ag-alt{margin:10px 0 4px;padding:10px 12px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px}
+  .ag-alt>b{display:block;font-size:14px;color:#c2410c;margin-bottom:4px}
+  .ag-alt ol.ag-steps{margin:0;padding-left:20px}
 
   /* 면접 사전 준비 */
   .prep-intro{background:linear-gradient(135deg,#4a6bdf,#5f80f2);color:#fff;border-radius:14px;
@@ -379,11 +383,19 @@
             <p class="ag-lead">대학 <b>‘선행학습 영향평가 보고서(PDF)’</b>를 AI로 <b>JSON</b>으로 바꾼 뒤, 아래 ‘파일 선택’으로 올리면 대학이 추가됩니다.</p>
             <ol class="ag-steps">
               <li><b>PDF 준비</b> — 추가할 대학의 선행학습 영향평가 보고서 (글자 복사가 되는 디지털 PDF).</li>
-              <li><b>AI에 첨부</b> — Claude(claude.ai) 등에 그 PDF를 첨부합니다.</li>
+              <li><b>AI에 전달</b> — Claude(claude.ai) 등에 그 PDF를 <b>첨부</b>합니다. <span class="ag-hl">첨부가 안 되는 무료 버전이면, 아래 ‘방법 2’로 텍스트를 붙여넣으세요.</span></li>
               <li>아래 <b>변환 프롬프트를 복사</b>해 붙여넣고 전송 → <b>JSON</b>을 받습니다.</li>
               <li>받은 JSON을 메모장에 붙여 <code>대학이름.json</code> (UTF-8)으로 저장합니다.</li>
               <li>아래 <b>‘파일 선택’</b>으로 그 <code>.json</code> 파일을 올립니다.</li>
             </ol>
+            <div class="ag-alt">
+              <b>방법 2 · 파일 업로드가 안 될 때 (텍스트 붙여넣기)</b>
+              <ol class="ag-steps">
+                <li>PDF를 열고 <b>전체 선택(Ctrl+A) → 복사(Ctrl+C)</b> 합니다.</li>
+                <li>AI 대화창에 <b>붙여넣기(Ctrl+V)</b> 한 뒤, 그 아래에 위 <b>변환 프롬프트</b>를 함께 붙여넣어 전송합니다.</li>
+                <li>보고서가 너무 길면 <b>‘면접·문항 예시·평가요소’ 부분만</b> 복사해도 됩니다. (논술·제시문 부분은 빼도 무방)</li>
+              </ol>
+            </div>
             <div class="ag-prompt-head">
               <span>▼ 변환 프롬프트</span>
               <button type="button" class="mini" id="copyPrompt">프롬프트 복사</button>
@@ -470,9 +482,14 @@
     "school": "상원고등학교",
     "planner": "유은실",
     "role": "교사",
-    "version": "2.4",
+    "version": "2.5",
     "date": "2026-09-01",
     "changelog": [
+      {
+        "v": "2.5",
+        "date": "2026-09-01",
+        "note": "‘PDF로 대학 추가하는 방법’에 ‘방법 2·텍스트 붙여넣기’ 추가 — 파일 업로드가 안 되는 무료 AI에서도 PDF 글자를 복사해 변환 가능"
+      },
       {
         "v": "2.4",
         "date": "2026-09-01",
