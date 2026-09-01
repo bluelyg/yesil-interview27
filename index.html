@@ -153,6 +153,24 @@
   .toast.show{opacity:1}
   a.link{color:var(--brand);font-weight:600}
 
+  /* 대학 추가 안내 */
+  .addguide{border:1px solid var(--line);border-radius:12px;background:#f8fafc;margin:4px 0 12px;overflow:hidden}
+  .addguide>summary{list-style:none;cursor:pointer;padding:12px 13px;font-weight:800;font-size:15px;color:var(--brand);background:#eef4ff}
+  .addguide>summary::-webkit-details-marker{display:none}
+  .addguide>summary::after{content:"펼치기 ▾";float:right;font-size:12.5px;color:var(--sub);font-weight:700}
+  .addguide[open]>summary::after{content:"접기 ▴"}
+  .addguide .ag-body{padding:12px 14px}
+  .addguide .ag-lead{margin:0 0 10px;font-size:14.5px;color:#334155;line-height:1.55}
+  .addguide ol.ag-steps{margin:0 0 12px;padding-left:20px}
+  .addguide ol.ag-steps li{font-size:14.5px;line-height:1.6;margin:5px 0;color:#1f2937}
+  .addguide code{background:#e8eefc;border-radius:5px;padding:1px 5px;font-size:13px;font-family:Consolas,monospace}
+  .ag-prompt-head{display:flex;align-items:center;justify-content:space-between;margin:2px 0 6px;gap:8px}
+  .ag-prompt-head span{font-weight:800;font-size:14px;color:#0f172a}
+  .ag-prompt-head button{flex-shrink:0}
+  .ag-prompt{width:100%;box-sizing:border-box;height:160px;font-family:Consolas,monospace;font-size:12px;line-height:1.5;
+    border:1px solid var(--line);border-radius:8px;padding:9px;background:#fff;color:#1e293b;resize:vertical}
+  .ag-note{margin:9px 0 0;font-size:13px;color:var(--sub);line-height:1.5}
+
   /* 면접 사전 준비 */
   .prep-intro{background:linear-gradient(135deg,#4a6bdf,#5f80f2);color:#fff;border-radius:14px;
     padding:14px 16px;margin-bottom:14px}
@@ -355,7 +373,69 @@
       </div>
       <div class="card">
         <h3>➕ 내 지원 대학 추가</h3>
-        <p class="muted">같은 형식의 JSON 파일을 불러오면 기본 데이터에 합쳐지고, <b>이 기기에 저장되어 다음에 열 때도 유지</b>됩니다. (개인별 추가용)</p>
+        <details class="addguide">
+          <summary>📄 PDF로 대학 추가하는 방법</summary>
+          <div class="ag-body">
+            <p class="ag-lead">대학 <b>‘선행학습 영향평가 보고서(PDF)’</b>를 AI로 <b>JSON</b>으로 바꾼 뒤, 아래 ‘파일 선택’으로 올리면 대학이 추가됩니다.</p>
+            <ol class="ag-steps">
+              <li><b>PDF 준비</b> — 추가할 대학의 선행학습 영향평가 보고서 (글자 복사가 되는 디지털 PDF).</li>
+              <li><b>AI에 첨부</b> — Claude(claude.ai) 등에 그 PDF를 첨부합니다.</li>
+              <li>아래 <b>변환 프롬프트를 복사</b>해 붙여넣고 전송 → <b>JSON</b>을 받습니다.</li>
+              <li>받은 JSON을 메모장에 붙여 <code>대학이름.json</code> (UTF-8)으로 저장합니다.</li>
+              <li>아래 <b>‘파일 선택’</b>으로 그 <code>.json</code> 파일을 올립니다.</li>
+            </ol>
+            <div class="ag-prompt-head">
+              <span>▼ 변환 프롬프트</span>
+              <button type="button" class="mini" id="copyPrompt">프롬프트 복사</button>
+            </div>
+            <textarea id="promptText" class="ag-prompt" readonly>아래 지시에 따라, 첨부한 '대학별 선행학습 영향평가 보고서(PDF)'를 우리 면접 대비 앱에서 쓰는 JSON으로 변환해줘.
+
+[규칙]
+1. 결과는 오직 JSON만 출력하고, 다른 설명은 붙이지 마.
+2. 최상위는 {"universities":[ ... ]} 하나. 아래 스키마와 똑같은 구조로.
+3. 학생부·인성 기반 면접만 담아. 제시문 기반 구술·논술 문항은 제외.
+4. id는 영문 소문자 슬러그로 겹치지 않게(예: "kookmin"). pastQuestions의 id도 고유하게(예: "kookmin-1").
+5. question(문항)은 보고서 원문에 충실하게. 지어내지 마.
+6. evaluationCriteria(평가요소)는 보고서의 면접 평가항목을 요약해 넣어.
+7. modelAnswer(모범답안 방향)·keywords(핵심키워드)는 보고서에 없으면 학생 지도용으로 간단히 생성해도 돼(정답이 아니라 '답변 방향' 수준).
+8. color는 아무 hex 색(예: "#2563eb").
+9. 보고서에 면접이 없으면 "면접 없음"이라고만 답해.
+
+[스키마 예시]
+{
+  "universities": [{
+    "id": "dongseo",
+    "name": "동서대학교",
+    "color": "#be123c",
+    "admissions": [{
+      "id": "ds-hakbu",
+      "name": "학생부면접 전형",
+      "type": "면접·구술고사(비대면)",
+      "interviewStyle": "인성 및 기초소양 위주(교과 지식 미출제).",
+      "scheduleNote": "2027학년도 일정은 모집요강 확인 필요.",
+      "evaluationCriteria": [
+        {"name": "인성·기초소양", "desc": "인성 및 기초소양(등급 평가)"},
+        {"name": "자기표현·발전가능성", "desc": "표현 능력과 성장 잠재력"}
+      ],
+      "dates": []
+    }],
+    "pastQuestions": [{
+      "id": "ds-1",
+      "year": 2026,
+      "admission": "학생부면접 전형",
+      "field": "공통",
+      "question": "오늘 하루 스마트폰을 쓸 수 없다면 무엇을 하며 보내고 싶은지 설명하세요.",
+      "modelAnswer": "구체적 활동과 그 이유·의미를 자연스럽게 연결. 솔직하되 긍정적으로.",
+      "keywords": ["구체적 활동", "선택 이유", "의미", "솔직함"]
+    }]
+  }]
+}
+
+이제 첨부한 PDF로 변환해줘.</textarea>
+            <p class="ag-note">💡 더 자세한 설명은 배포 폴더의 <b>‘PDF로_대학추가하기’</b> 안내문(Word)을 참고하세요. 여러 대학은 <code>universities</code> 배열에 이어서 담으면 한 번에 추가됩니다.</p>
+          </div>
+        </details>
+        <p class="muted">위에서 만든 <b>JSON 파일</b>을 불러오면 기본 데이터에 합쳐지고, <b>이 기기에 저장되어 다음에 열 때도 유지</b>됩니다. (개인별 추가용)</p>
         <input type="file" id="jsonFile" accept="application/json,.json" style="margin-top:8px">
         <p class="muted" id="loadMsg" style="margin-top:8px"></p>
         <div id="userDataInfo" class="muted" style="margin-top:6px"></div>
@@ -390,9 +470,19 @@
     "school": "상원고등학교",
     "planner": "유은실",
     "role": "교사",
-    "version": "2.0",
-    "date": "2026-08-31",
+    "version": "2.2",
+    "date": "2026-09-01",
     "changelog": [
+      {
+        "v": "2.2",
+        "date": "2026-09-01",
+        "note": "기본 대학 확대(배치3) — 학생부·인성 기반 면접 11개교 추가(가천·가톨릭·강남·명지·안양·용인·을지·한남·남서울·배재·순천향). 수록 25개교·기출 91문항. 제시문/논술 위주(한국기술교육대 등)는 제외"
+      },
+      {
+        "v": "2.1",
+        "date": "2026-08-31",
+        "note": "‘내 지원 대학 추가’에 PDF→JSON 변환 안내와 복사용 프롬프트 내장 — 보고서 PDF를 AI로 변환해 바로 업로드 가능"
+      },
       {
         "v": "2.0",
         "date": "2026-08-31",
@@ -2310,6 +2400,773 @@
           ]
         }
       ]
+    },
+    {
+      "id": "myongji",
+      "name": "명지대학교",
+      "color": "#1d4ed8",
+      "admissions": [
+        {
+          "id": "mj-jonghap",
+          "name": "학생부종합(면접형)",
+          "type": "서류 기반 인성·전공 면접",
+          "interviewStyle": "학교생활기록부를 바탕으로 지원자의 활동·경험을 확인하는 면접. 교과 지식은 직접 묻지 않음.",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "전공·진로역량",
+              "desc": "지원 전공에 대한 진로탐색 활동과 경험"
+            },
+            {
+              "name": "발전가능성",
+              "desc": "활동을 통한 성장과 잠재력"
+            },
+            {
+              "name": "인성",
+              "desc": "공동체의식·성실성 등 기본 인성"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "mj-1",
+          "year": 2026,
+          "admission": "학생부종합(면접형)",
+          "field": "공통",
+          "question": "고등학교 생활(검정고시 포함) 중 수행한 활동 가운데 의미 있었던 것이 있으면 서술하시오.",
+          "modelAnswer": "활동을 구체적으로 소개하고, 그 활동을 하게 된 계기·과정·배운 점을 학교생활기록부 내용과 연결해 설명한다.",
+          "keywords": [
+            "구체적 활동",
+            "계기",
+            "배운 점",
+            "성장"
+          ]
+        },
+        {
+          "id": "mj-2",
+          "year": 2026,
+          "admission": "학생부종합(면접형)",
+          "field": "전공",
+          "question": "지원한 전공(학부/학과)과 관련하여 사회적 이슈 하나를 들고, 이에 대한 본인의 의견 또는 해결방안을 제시하시오.",
+          "modelAnswer": "전공과 연결되는 사회 이슈를 하나 골라 배경을 간단히 설명하고, 자신의 관점과 근거·해결 방향을 논리적으로 제시한다.",
+          "keywords": [
+            "전공 연계",
+            "사회 이슈",
+            "자기 의견",
+            "근거·해결"
+          ]
+        },
+        {
+          "id": "mj-3",
+          "year": 2026,
+          "admission": "학생부종합(면접형)",
+          "field": "전공",
+          "question": "지원한 전공(학부/학과)을 졸업한 10년 후의 본인 모습과 이를 달성하기 위한 준비과정을 기술하시오.",
+          "modelAnswer": "구체적 진로 목표를 제시하고, 그 목표에 이르기 위해 대학에서·이후에 어떤 준비를 할지 단계적으로 설명한다.",
+          "keywords": [
+            "진로 목표",
+            "10년 후",
+            "준비 계획",
+            "실천"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "anyang",
+      "name": "안양대학교",
+      "color": "#0891b2",
+      "admissions": [
+        {
+          "id": "ay-myeonjeop",
+          "name": "아리학생부면접·아리학생부종합Ⅰ",
+          "type": "인성면접(교과 지식 미출제)",
+          "interviewStyle": "학생부교과(아리학생부면접)는 인성면접, 학생부종합Ⅰ은 제출서류 기반 질문+인성면접으로 진행.",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "전공소양",
+              "desc": "지원동기 및 지원학과에 대한 관심도"
+            },
+            {
+              "name": "일반소양",
+              "desc": "의사소통 능력 및 공동체 의식"
+            },
+            {
+              "name": "인성·발전가능성",
+              "desc": "공동체의식·협력, 적성 및 고교 기간의 노력"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "ay-1",
+          "year": 2026,
+          "admission": "아리학생부면접",
+          "field": "전공소양",
+          "question": "우리 학과에 지원한 동기와, 지원 학과에 대한 관심을 말해 보세요.",
+          "modelAnswer": "학과를 알게 된 계기와 관심을 키운 활동을 연결해, 왜 이 학과인지 진솔하게 설명한다.",
+          "keywords": [
+            "지원동기",
+            "학과 관심",
+            "계기",
+            "진로"
+          ]
+        },
+        {
+          "id": "ay-2",
+          "year": 2026,
+          "admission": "아리학생부면접",
+          "field": "일반소양",
+          "question": "팀 활동에서 의견이 달라 갈등이 있었을 때, 어떻게 소통하고 협력했는지 말해 보세요.",
+          "modelAnswer": "구체적 상황을 제시하고, 상대 입장을 존중하며 조율한 과정과 결과·배운 점을 설명한다.",
+          "keywords": [
+            "갈등 상황",
+            "의사소통",
+            "협력",
+            "공동체"
+          ]
+        },
+        {
+          "id": "ay-3",
+          "year": 2026,
+          "admission": "아리학생부종합Ⅰ",
+          "field": "발전가능성",
+          "question": "고교 3년간 부족한 점을 채우기 위해 꾸준히 노력한 경험을 말해 보세요.",
+          "modelAnswer": "목표를 정하고 스스로 노력한 과정을 구체적으로 보여주며, 성장과 발전가능성을 드러낸다.",
+          "keywords": [
+            "자기주도",
+            "노력 과정",
+            "성장",
+            "발전가능성"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yongin",
+      "name": "용인대학교",
+      "color": "#7c3aed",
+      "admissions": [
+        {
+          "id": "yi-myeonjeop",
+          "name": "면접고사(기본소양·전공적성)",
+          "type": "인성·소양 면접(즉문즉답)",
+          "interviewStyle": "면접 평가위원이 수험생별로 기본소양·전공적성 문항을 질문. 교과 지식 관련 문항은 출제하지 않음. (재외국민 특별전형 중심)",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "기본소양",
+              "desc": "인성 및 태도, 사고력, 표현력"
+            },
+            {
+              "name": "전공적성",
+              "desc": "이해력, 논리성, 표현력"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "yi-1",
+          "year": 2026,
+          "admission": "면접고사",
+          "field": "전공적성",
+          "question": "지원 분야에 관심을 갖게 된 계기와 그동안 기울인 노력을 말해 보세요.",
+          "modelAnswer": "관심의 출발점을 밝히고, 그 관심을 이어가기 위해 한 학습·활동을 논리적으로 설명한다.",
+          "keywords": [
+            "관심 계기",
+            "노력",
+            "전공 이해",
+            "논리성"
+          ]
+        },
+        {
+          "id": "yi-2",
+          "year": 2026,
+          "admission": "면접고사",
+          "field": "기본소양",
+          "question": "자신이 중요하게 여기는 가치관은 무엇이며, 그것이 드러난 경험을 말해 보세요.",
+          "modelAnswer": "핵심 가치를 한두 가지로 제시하고, 그것이 실제 행동으로 드러난 경험을 진지한 태도로 이야기한다.",
+          "keywords": [
+            "가치관",
+            "태도",
+            "경험",
+            "표현력"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eulji",
+      "name": "을지대학교",
+      "color": "#059669",
+      "admissions": [
+        {
+          "id": "eu-eumyeon",
+          "name": "학생부종합 EU면접형",
+          "type": "서류(학생부) 기반 면접",
+          "interviewStyle": "제출된 학교생활기록부를 중심으로 진행되는 서류 기반 면접. 인성·창의성·리더십·전공적합성을 종합 평가.",
+          "scheduleNote": "2026학년도 기준. 의예과 적성·제시문 문항은 제외. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "인성",
+              "desc": "공동체의식·성실성 등 기본 인성"
+            },
+            {
+              "name": "창의성",
+              "desc": "문제를 새롭게 바라보고 해결하는 힘"
+            },
+            {
+              "name": "리더십",
+              "desc": "공동체에서의 주도성과 협력"
+            },
+            {
+              "name": "전공적합성",
+              "desc": "지원 전공에 대한 관심·준비"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "eu-1",
+          "year": 2026,
+          "admission": "학생부종합 EU면접형",
+          "field": "공통",
+          "question": "학교생활기록부에 기재된 활동 중 가장 의미 있었던 것과 그 이유를 말해 보세요.",
+          "modelAnswer": "활동을 고르고, 왜 의미가 있었는지 자신의 변화·배움과 연결해 설명한다.",
+          "keywords": [
+            "의미 있는 활동",
+            "이유",
+            "배움",
+            "성장"
+          ]
+        },
+        {
+          "id": "eu-2",
+          "year": 2026,
+          "admission": "학생부종합 EU면접형",
+          "field": "리더십",
+          "question": "팀을 이끌거나 함께 문제를 해결한 경험을 구체적으로 말해 보세요.",
+          "modelAnswer": "상황·자신의 역할·행동·결과를 순서대로 제시하고, 협력 속 리더십을 드러낸다.",
+          "keywords": [
+            "리더십",
+            "역할",
+            "문제해결",
+            "협력"
+          ]
+        },
+        {
+          "id": "eu-3",
+          "year": 2026,
+          "admission": "학생부종합 EU면접형",
+          "field": "전공적합성",
+          "question": "지원 전공과 관련해 스스로 탐구하거나 준비한 활동을 말해 보세요.",
+          "modelAnswer": "전공 관심을 보여주는 활동을 구체적으로 제시하고, 그로부터 배운 점과 앞으로의 계획을 설명한다.",
+          "keywords": [
+            "전공 탐구",
+            "자기주도",
+            "배운 점",
+            "진로 계획"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hannam",
+      "name": "한남대학교",
+      "color": "#b45309",
+      "admissions": [
+        {
+          "id": "hn-injae",
+          "name": "한남인재Ⅱ·창업인재(서류+면접)",
+          "type": "서류 기반 인성·소양 면접",
+          "interviewStyle": "학교생활기록부 등 제출서류를 바탕으로 기본소양·전공소양을 확인하는 면접. 전공 지식 확인 질문은 지양.",
+          "scheduleNote": "2026학년도 면접 11월 하순. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "기본소양",
+              "desc": "의사소통·인성·태도 등 기본 소양"
+            },
+            {
+              "name": "전공소양",
+              "desc": "지원 전공에 대한 관심과 준비"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "hn-1",
+          "year": 2026,
+          "admission": "한남인재Ⅱ(서류+면접)",
+          "field": "전공소양",
+          "question": "우리 대학 지원 학과(전공)에 지원한 동기는 무엇이며, 앞으로의 학업계획은 어떻게 되나요?",
+          "modelAnswer": "학과 지원 계기를 활동과 연결해 밝히고, 입학 후 배우고 싶은 것과 학업 계획을 구체적으로 제시한다.",
+          "keywords": [
+            "지원동기",
+            "학업계획",
+            "전공 관심",
+            "진로"
+          ]
+        },
+        {
+          "id": "hn-2",
+          "year": 2026,
+          "admission": "한남인재Ⅱ(서류+면접)",
+          "field": "기본소양",
+          "question": "동아리(팀) 활동에서 부원들과 함께 활동했는데, 본인의 역할은 무엇이었는지 설명해 주세요.",
+          "modelAnswer": "활동 속 자신의 역할과 기여를 구체적으로 설명하고, 협력 과정에서 배운 점을 덧붙인다.",
+          "keywords": [
+            "역할",
+            "기여",
+            "협력",
+            "공동체"
+          ]
+        },
+        {
+          "id": "hn-3",
+          "year": 2026,
+          "admission": "한남인재Ⅱ(서류+면접)",
+          "field": "기본소양",
+          "question": "어떤 활동을 하면서 어려웠던 부분과, 문제 해결을 위해 어떤 노력을 했는지 설명해 주세요.",
+          "modelAnswer": "어려움의 상황을 솔직히 밝히고, 이를 극복하기 위한 노력과 결과·교훈을 설명한다.",
+          "keywords": [
+            "어려움",
+            "문제해결",
+            "노력",
+            "교훈"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "namseoul",
+      "name": "남서울대학교",
+      "color": "#dc2626",
+      "admissions": [
+        {
+          "id": "ns-inseong",
+          "name": "학생부종합 인성면접",
+          "type": "인성 면접(교과 지식 무관)",
+          "interviewStyle": "교과지식과 무관한 인성 면접으로, 인성·리더십 및 전공적합성을 평가.",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "인성",
+              "desc": "공동체의식·성실성·태도"
+            },
+            {
+              "name": "리더십",
+              "desc": "주도성과 협력 경험"
+            },
+            {
+              "name": "전공적합성",
+              "desc": "지원 전공에 대한 관심·준비"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "ns-1",
+          "year": 2026,
+          "admission": "학생부종합 인성면접",
+          "field": "전공적합성",
+          "question": "지원 전공과 관련해 진로에 필요한 지식이나 기술을 쌓기 위해 특별히 기울인 노력이 있다면 무엇인지 이야기하시오.",
+          "modelAnswer": "심화 학습·프로젝트·주제 탐구 등 구체적 노력을 하나 이상 제시하고, 그로부터 얻은 것을 설명한다.",
+          "keywords": [
+            "진로 준비",
+            "심화 학습",
+            "탐구",
+            "전공적합성"
+          ]
+        },
+        {
+          "id": "ns-2",
+          "year": 2026,
+          "admission": "학생부종합 인성면접",
+          "field": "전공적합성",
+          "question": "이 전공에 흥미·관심을 갖게 된 계기, 또는 자신이 어떤 면에서 전공과 잘 맞다고 생각하는지 설명해 주세요.",
+          "modelAnswer": "관심의 계기를 밝히고, 자신의 성향·강점이 전공과 어떻게 맞는지 근거를 들어 설명한다.",
+          "keywords": [
+            "관심 계기",
+            "적합성",
+            "강점",
+            "진로"
+          ]
+        },
+        {
+          "id": "ns-3",
+          "year": 2026,
+          "admission": "학생부종합 인성면접",
+          "field": "인성",
+          "question": "여러 사람과 협업할 때 본인의 강점은 무엇이라고 생각하며, 그것이 드러난 경험을 말해 보세요.",
+          "modelAnswer": "협업 강점을 한 가지로 제시하고, 실제 팀 활동에서 그 강점이 발휘된 사례를 이야기한다.",
+          "keywords": [
+            "협업",
+            "강점",
+            "리더십",
+            "경험"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paichai",
+      "name": "배재대학교",
+      "color": "#0f766e",
+      "admissions": [
+        {
+          "id": "pc-inseong",
+          "name": "항공인재·체육특기 등 인성면접",
+          "type": "인성 면접(교과 지식 무관)",
+          "interviewStyle": "교과지식과 무관한 인성 면접. 지원 동기·인성 관련 문항 중심(2026학년도는 교과연계 문항 폐지).",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "인성",
+              "desc": "태도·공동체의식 등 기본 인성"
+            },
+            {
+              "name": "지원동기",
+              "desc": "지원 학과에 대한 동기와 관심"
+            },
+            {
+              "name": "발전가능성",
+              "desc": "성실성과 성장 잠재력"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "pc-1",
+          "year": 2026,
+          "admission": "인성면접",
+          "field": "지원동기",
+          "question": "지원 학과(예: 항공서비스학과)를 선택한 이유는 무엇인가요?",
+          "modelAnswer": "학과를 선택한 계기와 관심을 진솔하게 밝히고, 자신의 준비·강점과 연결해 설명한다.",
+          "keywords": [
+            "지원동기",
+            "학과 선택",
+            "관심",
+            "준비"
+          ]
+        },
+        {
+          "id": "pc-2",
+          "year": 2026,
+          "admission": "인성면접",
+          "field": "인성",
+          "question": "다른 사람과 함께 일할 때 본인이 중요하게 생각하는 태도는 무엇인지, 관련 경험과 함께 말해 보세요.",
+          "modelAnswer": "중요하게 여기는 태도를 제시하고, 그것이 드러난 협력 경험을 예로 들어 이야기한다.",
+          "keywords": [
+            "태도",
+            "협력",
+            "공동체",
+            "경험"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "soonchunhyang",
+      "name": "순천향대학교",
+      "color": "#2563eb",
+      "admissions": [
+        {
+          "id": "sch-jonghap",
+          "name": "학생부종합(확인 면접)",
+          "type": "서류 확인 위주 면접",
+          "interviewStyle": "학교생활기록부 등 제출서류 기재 사항을 중심으로 확인 위주 면접. 교과 지식·시사상식 문항은 출제하지 않음.",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "전공 관심·활동",
+              "desc": "지원 분야에 대한 관심과 관련 활동 확인"
+            },
+            {
+              "name": "인성·태도",
+              "desc": "성실성·공동체의식 등 기본 인성"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "sch-1",
+          "year": 2026,
+          "admission": "학생부종합(확인 면접)",
+          "field": "전공",
+          "question": "우리 학과(또는 지원 분야)에 지원한 이유는 무엇인가요?",
+          "modelAnswer": "지원 계기를 활동·경험과 연결해 설명하고, 그 분야에서 이루고 싶은 것을 덧붙인다.",
+          "keywords": [
+            "지원 이유",
+            "관심",
+            "활동 연계",
+            "진로"
+          ]
+        },
+        {
+          "id": "sch-2",
+          "year": 2026,
+          "admission": "학생부종합(확인 면접)",
+          "field": "공통",
+          "question": "학교생활기록부에 기재된 활동 중 지원 분야와 연결되는 경험을 설명해 주세요.",
+          "modelAnswer": "기록부 속 활동 하나를 골라 구체적으로 설명하고, 그것이 지원 분야와 어떻게 연결되는지 밝힌다.",
+          "keywords": [
+            "기록부 활동",
+            "전공 연계",
+            "경험",
+            "구체성"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kangnam",
+      "name": "강남대학교",
+      "color": "#ea580c",
+      "admissions": [
+        {
+          "id": "kn-woosu",
+          "name": "학생부종합(학교생활우수자전형2) 면접·구술",
+          "type": "서류(학생부) 기반 면접",
+          "interviewStyle": "학교생활기록부 기재 내용을 중심으로 면접관 3인 대 지원자 1인 개별 대면면접. 교과 지식을 묻거나 유도하는 질문은 실시하지 않음.",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "전공적합성",
+              "desc": "지원동기·진로 계획, 전공 탐구역량과 발전가능성"
+            },
+            {
+              "name": "인성적 자질",
+              "desc": "정직·배려·열린 마음·공동체 의식"
+            },
+            {
+              "name": "종합적 사고력",
+              "desc": "질문에 대한 이해·분석과 타당한 답변"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "kn-1",
+          "year": 2026,
+          "admission": "학교생활우수자전형2",
+          "field": "전공적합성",
+          "question": "지원 전공(모집단위)을 선택한 이유가 있을까요? 학습을 위해 노력한 것이 있다면 무엇인가요?",
+          "modelAnswer": "전공 선택의 계기를 밝히고, 그 전공을 위해 스스로 학습·활동한 노력을 구체적으로 설명한다.",
+          "keywords": [
+            "전공 선택",
+            "이유",
+            "학습 노력",
+            "전공적합성"
+          ]
+        },
+        {
+          "id": "kn-2",
+          "year": 2026,
+          "admission": "학교생활우수자전형2",
+          "field": "인성적 자질",
+          "question": "학교생활 중 참여한 활동을 통해 배우고 느낀 점을 이야기해 보세요.",
+          "modelAnswer": "활동을 소개하고, 그 과정에서 배운 점·성장을 배려·공동체 의식 등 인성과 연결해 이야기한다.",
+          "keywords": [
+            "활동",
+            "배운 점",
+            "인성",
+            "공동체"
+          ]
+        },
+        {
+          "id": "kn-3",
+          "year": 2026,
+          "admission": "학교생활우수자전형2",
+          "field": "전공적합성",
+          "question": "지원 동기와 앞으로의 진로 계획을 말해 보세요.",
+          "modelAnswer": "지원 동기를 활동·경험과 연결해 밝히고, 대학 이후의 진로 계획을 단계적으로 제시한다.",
+          "keywords": [
+            "지원동기",
+            "진로 계획",
+            "발전가능성",
+            "준비"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "catholic",
+      "name": "가톨릭대학교",
+      "color": "#7e22ce",
+      "admissions": [
+        {
+          "id": "cu-jamjae",
+          "name": "학생부종합(잠재능력우수자면접/학교장추천 등)",
+          "type": "제출서류 확인 개별면접",
+          "interviewStyle": "지원자의 제출서류(학교생활기록부) 내용에 대한 개별 확인 면접. 공통문항 없이 서류 기반으로 진행(교과지식 활용 문항 폐지). ※ 의예과 제시문 면접은 제외.",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "진로역량",
+              "desc": "진로에 대한 관심과 전공 선택의 이유·준비"
+            },
+            {
+              "name": "학업역량",
+              "desc": "학습 경험과 그로부터 얻은 성장"
+            },
+            {
+              "name": "공동체역량",
+              "desc": "협력·배려·갈등 해결 등 공동체 경험"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "cu-1",
+          "year": 2026,
+          "admission": "학생부종합(잠재능력우수자면접)",
+          "field": "진로역량",
+          "question": "지원자가 반드시 지금의 전공을 선택해야 하는 이유는 무엇인가요? 자신의 꿈·활동과 연결해 말해 보세요.",
+          "modelAnswer": "꿈과 전공의 연결고리를 분명히 하고, 그 전공이어야 하는 이유를 자신의 활동·경험을 근거로 설명한다.",
+          "keywords": [
+            "전공 선택 이유",
+            "꿈 연계",
+            "진로역량",
+            "근거"
+          ]
+        },
+        {
+          "id": "cu-2",
+          "year": 2026,
+          "admission": "학생부종합(잠재능력우수자면접)",
+          "field": "학업역량",
+          "question": "수업에서 발표해 좋은 호응을 받은 경험에서, 어떤 점을 인정받았고 그 활동으로 무엇을 얻었는지 말해 보세요.",
+          "modelAnswer": "구체적 학습 경험을 제시하고, 인정받은 강점과 그 활동을 통한 성장·배움을 설명한다.",
+          "keywords": [
+            "학습 경험",
+            "강점",
+            "성장",
+            "학업역량"
+          ]
+        },
+        {
+          "id": "cu-3",
+          "year": 2026,
+          "admission": "학생부종합(잠재능력우수자면접)",
+          "field": "공동체역량",
+          "question": "봉사(또는 동아리) 활동에 참여하게 된 계기와, 가장 의미 있었던 활동에서 본인의 역할을 말해 보세요.",
+          "modelAnswer": "참여 계기를 밝히고, 의미 있었던 활동에서 자신의 역할과 배운 점을 공동체 관점에서 이야기한다.",
+          "keywords": [
+            "참여 계기",
+            "역할",
+            "공동체",
+            "배운 점"
+          ]
+        },
+        {
+          "id": "cu-4",
+          "year": 2026,
+          "admission": "학생부종합(잠재능력우수자면접)",
+          "field": "공동체역량",
+          "question": "3년간 같은 동아리 활동을 한 이유는 무엇이며, 그것이 본인의 어떤 점을 성장시켰다고 생각하나요?",
+          "modelAnswer": "꾸준함의 이유를 진솔하게 밝히고, 그 지속적 활동이 키운 역량·태도를 구체적으로 설명한다.",
+          "keywords": [
+            "지속성",
+            "이유",
+            "성장",
+            "역량"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gachon",
+      "name": "가천대학교",
+      "color": "#16a34a",
+      "admissions": [
+        {
+          "id": "gc-jonghap",
+          "name": "학생부종합·지역균형(면접)",
+          "type": "서류(학생부) 기반 면접",
+          "interviewStyle": "학교생활기록부 등 서류 평가 요소를 기반으로 면접 질문을 구성하는 서류 기반 면접. ※ 논술전형(제시문) 문항은 제외.",
+          "scheduleNote": "2026학년도 기준. 2027학년도 일정은 모집요강 확인 필요.",
+          "evaluationCriteria": [
+            {
+              "name": "인성",
+              "desc": "공동체의식·성실성 등 기본 인성"
+            },
+            {
+              "name": "성장가능성",
+              "desc": "활동을 통한 발전과 잠재력"
+            },
+            {
+              "name": "전공적합성",
+              "desc": "지원 전공에 대한 관심·준비"
+            }
+          ],
+          "dates": []
+        }
+      ],
+      "pastQuestions": [
+        {
+          "id": "gc-1",
+          "year": 2026,
+          "admission": "학생부종합(면접)",
+          "field": "전공적합성",
+          "question": "학교생활기록부 활동 중 지원 전공과 관련해 가장 열정을 쏟은 활동과 그 과정을 말해 보세요.",
+          "modelAnswer": "전공과 연결되는 활동을 골라 동기·과정·배운 점을 구체적으로 설명한다.",
+          "keywords": [
+            "전공 연계",
+            "열정",
+            "과정",
+            "배운 점"
+          ]
+        },
+        {
+          "id": "gc-2",
+          "year": 2026,
+          "admission": "학생부종합(면접)",
+          "field": "인성",
+          "question": "공동체 안에서 갈등이나 어려움을 겪었을 때, 어떻게 해결했는지 경험을 말해 보세요.",
+          "modelAnswer": "상황을 간단히 제시하고, 자신의 행동과 조율 과정·결과를 인성·공동체 관점에서 설명한다.",
+          "keywords": [
+            "갈등",
+            "해결",
+            "공동체",
+            "인성"
+          ]
+        },
+        {
+          "id": "gc-3",
+          "year": 2026,
+          "admission": "학생부종합(면접)",
+          "field": "성장가능성",
+          "question": "지원 전공을 위해 스스로 준비하거나 탐구한 내용과, 앞으로의 계획을 말해 보세요.",
+          "modelAnswer": "자기주도적 준비 활동을 제시하고, 그로부터의 성장과 대학 이후 계획을 연결해 설명한다.",
+          "keywords": [
+            "자기주도",
+            "탐구",
+            "성장",
+            "계획"
+          ]
+        }
+      ]
     }
   ],
   "interviewSchedule": [
@@ -3187,6 +4044,18 @@ function renderDataTab(){
   if(info) info.innerHTML = un? ('📌 내가 추가한 대학 <b>'+un+'개</b> (이 기기에 저장됨)') : '';
   if(rb) rb.style.display = un? 'inline-block':'none';
 }
+(function(){
+  var cp=$('#copyPrompt'); if(!cp) return;
+  cp.addEventListener('click',function(){
+    var t=$('#promptText'); if(!t) return;
+    t.focus(); t.select(); t.setSelectionRange(0,999999);
+    var ok=false;
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t.value); ok=true; } }catch(e){}
+    if(!ok){ try{ ok=document.execCommand('copy'); }catch(e){} }
+    cp.textContent = ok? '복사됨 ✓' : '길게 눌러 복사';
+    setTimeout(function(){ cp.textContent='프롬프트 복사'; }, 1600);
+  });
+})();
 $('#jsonFile').addEventListener('change',function(e){
   var file=e.target.files[0]; if(!file) return;
   var rd=new FileReader();
