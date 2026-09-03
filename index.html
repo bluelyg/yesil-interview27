@@ -90,9 +90,15 @@
     cursor:pointer;box-shadow:0 6px 18px rgba(30,64,175,.35);display:block;margin:0 auto}
   .mic.rec{background:var(--bad);animation:pulse 1.2s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}70%{box-shadow:0 0 0 16px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}
+  .tlabel{margin:16px 0 6px;font-size:14.5px;font-weight:800;color:var(--brand)}
   .transcript{min-height:64px;background:#f8fafc;border:1px dashed var(--line);border-radius:12px;padding:12px;
-    font-size:15.5px;margin-top:14px;white-space:pre-wrap}
+    font-size:15.5px;margin-top:0;white-space:pre-wrap}
   .transcript .interim{color:var(--sub)}
+  .iphone-tip{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px 13px;margin:10px 0 4px}
+  .iphone-tip>b{display:block;font-size:14px;color:#1d4ed8;margin-bottom:5px}
+  .iphone-tip ol{margin:0 0 6px;padding-left:20px}
+  .iphone-tip ol li{font-size:14px;line-height:1.6;margin:3px 0;color:#1f2937}
+  .iphone-tip>span{font-size:12.5px;color:var(--sub);line-height:1.5;display:block}
 
   .score{display:flex;align-items:center;gap:14px}
   .scorenum{font-size:40px;font-weight:800;line-height:1}
@@ -321,11 +327,21 @@
         <button class="mic" id="micBtn" title="녹음 시작/중지">🎤</button>
         <p class="muted" style="text-align:center;margin:10px 0 0" id="micHint">버튼을 누르면 90초 타이머와 함께 녹음이 시작됩니다.</p>
 
+        <div class="tlabel">📝 내 답변 (텍스트 변환)</div>
         <div class="transcript" id="transcript"><span class="muted">여기에 인식된 답변이 표시됩니다.</span></div>
 
         <div class="audiofb">
           <button class="mini" id="audioToggle">🎧 녹음 파일로 분석 (아이폰·인식 안 될 때)</button>
           <div id="audioPanel" hidden>
+            <div class="iphone-tip">
+              <b>🍎 아이폰은 이렇게 하세요 (방법 A)</b>
+              <ol>
+                <li><b>사파리</b>로 이 앱(https 주소)에 접속합니다.</li>
+                <li>아래 <b>‘⏺ 폰으로 녹음’</b>을 누르고 마이크 권한을 <b>‘허용’</b>합니다.</li>
+                <li>답변을 말한 뒤 다시 눌러 종료하면, 자동으로 <b>텍스트 변환·피드백</b>이 됩니다.</li>
+              </ol>
+              <span>※ 아이폰은 실시간 인식(🎤)이 지원되지 않아 이 방법을 사용합니다. 미리 ‘음성 메모’로 녹음해 둔 파일은 ‘📁 파일 업로드’로 올려도 됩니다.</span>
+            </div>
             <p class="muted" style="margin:10px 0 8px">폰으로 직접 녹음하거나, 저장해 둔 음성 파일을 올리면 브라우저 안에서 텍스트로 변환해 피드백합니다. (인터넷 필요, 최초 1회 모델 다운로드)</p>
             <div class="row">
               <button class="btn sec" id="recFileBtn">⏺ 폰으로 녹음</button>
@@ -492,9 +508,19 @@
     "school": "상원고등학교",
     "planner": "유은실",
     "role": "교사",
-    "version": "2.6",
+    "version": "2.8",
     "date": "2026-09-01",
     "changelog": [
+      {
+        "v": "2.8",
+        "date": "2026-09-01",
+        "note": "연습 화면 개선 — 변환 텍스트 상자에 ‘내 답변(텍스트 변환)’ 라벨 추가, ‘녹음 파일로 분석’에 아이폰 방법 A(그 자리에서 녹음) 안내 추가"
+      },
+      {
+        "v": "2.7",
+        "date": "2026-09-01",
+        "note": "자료 탭 ‘데이터 관리’의 등록 대학 목록을 가나다순으로 정렬"
+      },
       {
         "v": "2.6",
         "date": "2026-09-01",
@@ -4614,7 +4640,8 @@ function renderDataTab(){
     +'<div class="kv"><span>공통질문</span><b>'+common+'개</b></div>'
     +'<div class="kv"><span>기출문항</span><b>'+past+'개</b></div>'
     +'<div class="kv" style="border:0"><span>면접 일정</span><b>'+dates+'건</b></div>';
-  unis.forEach(function(u){
+  var unisSorted=unis.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'','ko');});
+  unisSorted.forEach(function(u){
     var r=el('div','kv');
     var mine=(USER.universities||[]).some(function(x){return x.id===u.id;})?' <span class="pill b">내 추가</span>':'';
     r.innerHTML='<span>· '+esc(u.name)+mine+'</span><span class="muted">전형 '+((u.admissions||[]).length)+' · 기출 '+((u.pastQuestions||[]).length)+'</span>';
